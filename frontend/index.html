@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevOps Task Manager</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <p class="brand">DevOps Task Manager</p>
+      <p class="subtitle">Лабораторна №1 — віртуалізація та контейнеризація</p>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <h1>Нове завдання</h1>
+        <form id="task-form">
+          <label>
+            Назва
+            <input id="title" name="title" required maxlength="200" placeholder="Наприклад: Написати Dockerfile" />
+          </label>
+          <label>
+            Опис
+            <textarea id="description" name="description" rows="3" placeholder="Короткий опис"></textarea>
+          </label>
+          <button type="submit">Додати</button>
+        </form>
+        <p id="status" class="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h1>Список завдань</h1>
+          <button type="button" id="refresh" class="ghost">Оновити</button>
+        </div>
+        <ul id="tasks" class="tasks"></ul>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h1>Сповіщення</h1>
+          <button type="button" id="refresh-notifications" class="ghost">Оновити</button>
+        </div>
+        <ul id="notifications" class="tasks"></ul>
+      </section>
+    </main>
+  </div>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
