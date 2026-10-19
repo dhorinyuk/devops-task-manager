@@ -63,8 +63,8 @@
 
 ### 2. Етапи пайплайну (Jobs)
 1. **`backend-ci`**, **`notification-ci`**, **`frontend-ci`** запускаються **паралельно та незалежно**:
-   - `actions/checkout@v4`: отримання коду.
-   - `actions/setup-python@v5` або `actions/setup-node@v4`: розгортання відповідного runtime (Python 3.12 / Node.js 20).
+   - `actions/checkout@v7`: отримання коду.
+   - `actions/setup-python@v7` або `actions/setup-node@v7`: розгортання відповідного середовища (Python 3.12 / Node.js 20).
    - Автоматичне кешування залежностей (`cache: pip`, `cache: npm`).
    - Встановлення залежностей (`pip install -r ...`, `npm ci`).
    - Лінтер (`ruff check`, `npm run lint`).
@@ -73,7 +73,7 @@
 2. **`docker-build-and-scan`** (залежить від `needs: [backend-ci, notification-ci, frontend-ci]`):
    - Запускається matrix-стратегією для 3 сервісів одночасно.
    - Створює образ за допомогою Docker Buildx.
-   - Запускає **Trivy** для виявлення CRITICAL-вразливостей (`exit-code: 1`).
+   - Запускає **Trivy** (`aquasecurity/trivy-action@v0.36.0`) для виявлення CRITICAL-вразливостей (`exit-code: 1`).
 3. **`publish-ghcr`** (залежить від `needs: [docker-build-and-scan]`, умова: `github.event_name == 'push'`):
    - **Ніколи не публікує образи для Pull Request**!
    - Автентифікується в GHCR за допомогою вбудованого `GITHUB_TOKEN` із правами `packages: write`.
