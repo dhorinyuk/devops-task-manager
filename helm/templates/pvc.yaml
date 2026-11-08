@@ -1,0 +1,18 @@
+# DVO-L4-3C8B52
+{{- if and .Values.db.enabled .Values.db.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-postgres-pvc
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database-storage
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.db.persistence.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.db.persistence.size | quote }}
+{{- end }}

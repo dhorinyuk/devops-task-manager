@@ -1,0 +1,17 @@
+# DVO-L4-3C8B52
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-config
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: config
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.config.appEnv | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  DB_HOST: {{ default (printf "%s-db" (include "devops-task-manager.fullname" .)) .Values.config.dbHost | quote }}
+  DB_PORT: {{ .Values.config.dbPort | quote }}
+  DB_NAME: {{ .Values.config.dbName | quote }}
+  NOTIFICATION_URL: {{ default (printf "http://%s-notification:%d" (include "devops-task-manager.fullname" .) (int .Values.notification.service.port)) .Values.config.notificationUrl | quote }}

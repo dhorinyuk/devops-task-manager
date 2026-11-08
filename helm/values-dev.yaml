@@ -1,0 +1,42 @@
+# DVO-L4-3C8B52
+# Environment-specific values: DEVELOPMENT
+
+config:
+  appEnv: "development"
+  logLevel: "debug"
+
+backend:
+  replicaCount: 1
+  image:
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+frontend:
+  replicaCount: 1
+  image:
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 150m
+      memory: 128Mi
+
+notification:
+  replicaCount: 1
+  image:
+    pullPolicy: IfNotPresent
+
+db:
+  image:
+    pullPolicy: IfNotPresent
+
+ingress:
+  enabled: false

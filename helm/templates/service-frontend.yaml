@@ -1,0 +1,24 @@
+# DVO-L4-3C8B52
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-frontend
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    app: frontend
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+    - port: {{ .Values.frontend.service.port }}
+      targetPort: 80
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.frontend.service.type "NodePort") .Values.frontend.service.nodePort }}
+      nodePort: {{ .Values.frontend.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "devops-task-manager.selectorLabels" . | nindent 4 }}
+    app: frontend

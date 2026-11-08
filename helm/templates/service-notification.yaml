@@ -1,0 +1,21 @@
+# DVO-L4-3C8B52
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-notification
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: notification-service
+    app: notification
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.notification.service.type }}
+  ports:
+    - port: {{ .Values.notification.service.port }}
+      targetPort: {{ .Values.notification.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "devops-task-manager.selectorLabels" . | nindent 4 }}
+    app: notification

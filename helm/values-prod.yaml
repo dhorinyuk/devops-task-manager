@@ -1,0 +1,62 @@
+# DVO-L4-3C8B52
+# Environment-specific values: PRODUCTION
+
+config:
+  appEnv: "production"
+  logLevel: "warn"
+
+backend:
+  replicaCount: 3
+  image:
+    tag: "1.1.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+frontend:
+  replicaCount: 2
+  image:
+    tag: "1.1.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+notification:
+  replicaCount: 2
+  image:
+    tag: "1.1.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+db:
+  image:
+    pullPolicy: IfNotPresent
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+ingress:
+  enabled: true
+  host: "taskmanager.prod.local"

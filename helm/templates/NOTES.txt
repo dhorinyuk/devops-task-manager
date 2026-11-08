@@ -1,0 +1,29 @@
+# DVO-L4-3C8B52
+DevOps Task Manager Release '{{ .Release.Name }}' deployed successfully!
+Mascot Approved: гарбуз
+
+1. Get the application URL:
+{{- if .Values.ingress.enabled }}
+  Add to your /etc/hosts (or C:\Windows\System32\drivers\etc\hosts):
+    $(minikube ip) {{ .Values.ingress.host }}
+  Then open in browser:
+    http://{{ .Values.ingress.host }}/
+{{- else if contains "NodePort" .Values.frontend.service.type }}
+  Export the NodePort and Minikube IP:
+    export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "devops-task-manager.fullname" . }}-frontend)
+    export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+    echo "Access application at: http://$NODE_IP:$NODE_PORT"
+  Or via Minikube shortcut:
+    minikube service {{ include "devops-task-manager.fullname" . }}-frontend -n {{ .Release.Namespace }}
+{{- else }}
+  Use port-forwarding to access the Frontend:
+    kubectl --namespace {{ .Release.Namespace }} port-forward service/{{ include "devops-task-manager.fullname" . }}-frontend 8080:80
+    echo "Visit: http://127.0.0.1:8080"
+{{- end }}
+
+2. Backend API Endpoint:
+  kubectl --namespace {{ .Release.Namespace }} port-forward service/{{ include "devops-task-manager.fullname" . }}-backend 8000:8000
+  Test health: curl http://127.0.0.1:8000/health
+
+3. Run Helm Chart Tests:
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

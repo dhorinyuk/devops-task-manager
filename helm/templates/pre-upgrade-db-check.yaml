@@ -1,0 +1,46 @@
+# DVO-L4-3C8B52
+{{- if and .Values.hooks.preUpgrade.enabled .Values.db.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "devops-task-manager.fullname" . }}-pre-upgrade-check"
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pre-upgrade-hook
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "devops-task-manager.labels" . | nindent 8 }}
+        app.kubernetes.io/component: pre-upgrade-hook
+      annotations:
+        {{- include "devops-task-manager.annotations" . | nindent 8 }}
+    spec:
+      containers:
+        - name: pre-upgrade-db-check
+          image: "{{ .Values.hooks.preUpgrade.image.repository }}:{{ .Values.hooks.preUpgrade.image.tag }}"
+          imagePullPolicy: {{ .Values.hooks.preUpgrade.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              echo "Starting Pre-Upgrade verification..."
+              {{- $dbHost := default (printf "%s-db" (include "devops-task-manager.fullname" .)) .Values.config.dbHost }}
+              echo "Checking PostgreSQL connection to {{$dbHost}}:{{.Values.config.dbPort}}..."
+              pg_isready -h "{{$dbHost}}" -p "{{.Values.config.dbPort}}" -U "{{.Values.secret.postgresUser}}" -d "{{.Values.secret.postgresDb}}" -t 10
+              STATUS=$?
+              if [ $STATUS -eq 0 ]; then
+                echo "Pre-upgrade check: PostgreSQL is healthy and accepting connections. Safe to upgrade."
+                exit 0
+              else
+                echo "Pre-upgrade check failed: PostgreSQL is not reachable."
+                exit 1
+              fi
+      restartPolicy: Never
+  backoffLimit: 2
+{{- end }}

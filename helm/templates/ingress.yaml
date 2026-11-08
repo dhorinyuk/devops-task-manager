@@ -1,0 +1,43 @@
+# DVO-L4-3C8B52
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-ingress
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "devops-task-manager.fullname" . }}-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "devops-task-manager.fullname" . }}-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+          - path: /notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "devops-task-manager.fullname" . }}-notification
+                port:
+                  number: {{ .Values.notification.service.port }}
+{{- end }}

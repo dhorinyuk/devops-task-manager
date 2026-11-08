@@ -1,0 +1,89 @@
+# DVO-L4-3C8B52
+{{- if .Values.db.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-db
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app: db
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "devops-task-manager.selectorLabels" . | nindent 6 }}
+      app: db
+  template:
+    metadata:
+      labels:
+        {{- include "devops-task-manager.labels" . | nindent 8 }}
+        app: db
+      annotations:
+        {{- include "devops-task-manager.annotations" . | nindent 8 }}
+    spec:
+      containers:
+        - name: db
+          image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag }}"
+          imagePullPolicy: {{ .Values.db.image.pullPolicy }}
+          ports:
+            - name: postgres
+              containerPort: {{ .Values.db.service.port }}
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "devops-task-manager.fullname" . }}-secret
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "devops-task-manager.fullname" . }}-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "devops-task-manager.fullname" . }}-secret
+                  key: POSTGRES_PASSWORD
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
+          {{- if .Values.db.persistence.enabled }}
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          {{- end }}
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.secret.postgresUser }}
+                - -d
+                - {{ .Values.secret.postgresDb }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - {{ .Values.secret.postgresUser }}
+                - -d
+                - {{ .Values.secret.postgresDb }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      {{- if .Values.db.persistence.enabled }}
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: {{ include "devops-task-manager.fullname" . }}-postgres-pvc
+      {{- end }}
+{{- end }}

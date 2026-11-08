@@ -1,0 +1,23 @@
+# DVO-L4-3C8B52
+{{- if .Values.db.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-db
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+    app: db
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.db.service.type }}
+  ports:
+    - port: {{ .Values.db.service.port }}
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    {{- include "devops-task-manager.selectorLabels" . | nindent 4 }}
+    app: db
+{{- end }}

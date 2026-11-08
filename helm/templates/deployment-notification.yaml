@@ -1,0 +1,48 @@
+# DVO-L4-3C8B52
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "devops-task-manager.fullname" . }}-notification
+  labels:
+    {{- include "devops-task-manager.labels" . | nindent 4 }}
+    app.kubernetes.io/component: notification-service
+    app: notification
+  annotations:
+    {{- include "devops-task-manager.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.notification.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "devops-task-manager.selectorLabels" . | nindent 6 }}
+      app: notification
+  template:
+    metadata:
+      labels:
+        {{- include "devops-task-manager.labels" . | nindent 8 }}
+        app: notification
+      annotations:
+        {{- include "devops-task-manager.annotations" . | nindent 8 }}
+    spec:
+      containers:
+        - name: notification
+          image: "{{ .Values.notification.image.repository }}:{{ .Values.notification.image.tag }}"
+          imagePullPolicy: {{ .Values.notification.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.notification.service.port }}
+          resources:
+            {{- toYaml .Values.notification.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.notification.probes.liveness.path }}
+              port: {{ .Values.notification.service.port }}
+            initialDelaySeconds: {{ .Values.notification.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.notification.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.notification.probes.liveness.timeoutSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.notification.probes.readiness.path }}
+              port: {{ .Values.notification.service.port }}
+            initialDelaySeconds: {{ .Values.notification.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.notification.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.notification.probes.readiness.timeoutSeconds }}

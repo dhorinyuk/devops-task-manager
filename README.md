@@ -1,138 +1,174 @@
-# DevOps Task Manager — Лабораторна робота №1
-# Тема: Віртуалізація та контейнеризація
+# DevOps Task Manager
 
-## Що це за проєкт
-
-**DevOps Task Manager** — веб-додаток для керування завданнями. Він спеціально
-зібраний під лабораторні з DevOps: є кілька сервісів, база даних, тести і повний
-Docker-стек.
-
-### Архітектура (кілька частин)
-
-| Сервіс | Технологія | Порт | Роль |
-|--------|------------|------|------|
-| `frontend` | Nginx + HTML/CSS/JS | 8080 | Веб-інтерфейс |
-| `backend` | FastAPI (Python) | 8000 | REST API для завдань |
-| `notification` | FastAPI (Python) | 8001 | Мікросервіс сповіщень |
-| `db` | PostgreSQL 16 | 5433 (host) → 5432 | База даних |
-
-Потік даних:
-1. Користувач відкриває UI на `http://localhost:8080`
-2. Frontend звертається до Backend API
-3. Backend зберігає завдання в PostgreSQL
-4. Backend надсилає подію в Notification Service
-5. UI також показує список сповіщень
-
-Це вже «майже мікросервіси»: окремі контейнери, окремі Dockerfile, окремі
-відповідальності. Зручно для наступних лабораторних (CI/CD, оркестрація тощо).
+Комплексний навчальний проєкт із дисципліни «DevOps» для автоматизації життєвого циклу розробки, контейнеризації, безперервної інтеграції (CI/CD) та оркестрації мікросервісного додатку у середовищах Kubernetes та Helm.
 
 ---
 
-## Як відповідає вимогам лабораторної
+## 1. Загальна архітектура проєкту
 
-- **1a** — Python + FastAPI + Nginx + PostgreSQL
-- **1b** — веб-додаток + база даних + міжсервісна взаємодія
-- **1c** — є unit і integration тести (`pytest`)
-- **1d** — складається з кількох частин: frontend, backend, notification, db
-- **2** — Dockerfile є для backend, notification і frontend
-- **3** — `docker-compose.yml` піднімає весь стек однією командою
+Система побудована за сервіс-орієнтованою мікросервісною архітектурою:
+
+```
+                          ┌──────────────────────────┐
+                          │   Ingress Controller     │
+                          │   (taskmanager.local)    │
+                          └─────────────┬────────────┘
+                                        │
+           ┌────────────────────────────┼────────────────────────────┐
+           │ (/)                        │ (/api, /health)            │ (/notifications)
+           ▼                            ▼                            ▼
+┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
+│   taskmanager-       │     │   taskmanager-       │     │   taskmanager-       │
+│   frontend           │────▶│   backend            │────▶│   notification       │
+│   (Nginx, Port 80)   │     │   (FastAPI, Port     │     │   (FastAPI, Port     │
+└──────────────────────┘     │    8000)             │     │    8001)             │
+                             └──────────┬───────────┘     └──────────────────────┘
+                                        │
+                                        ▼ (SQLAlchemy / Port 5432)
+                             ┌──────────────────────┐
+                             │   PostgreSQL DB      │
+                             │   (postgres:16,      │
+                             │    PVC: 1Gi-5Gi)     │
+                             └──────────────────────┘
+```
+
+### Компоненти системи:
+1. **Backend API (`backend/`):**
+   - **Стек:** Python 3.12, FastAPI, SQLAlchemy, Uvicorn.
+   - **Порт:** 8000.
+   - **Healthcheck:** `GET /health` (`{"status": "ok", "service": "backend", "version": "1.0.0"}`).
+   - **Змінні оточення:** `DATABASE_URL` (Secret), `NOTIFICATION_URL` (ConfigMap), `APP_ENV`, `LOG_LEVEL`.
+2. **Notification Service (`notification-service/`):**
+   - **Стек:** Python 3.12, FastAPI, Uvicorn.
+   - **Порт:** 8001.
+   - **Healthcheck:** `GET /health` (`{"status": "ok", "service": "notification", "version": "1.0.0"}`).
+3. **Frontend (`frontend/`):**
+   - **Стек:** HTML5, CSS3, Vanilla JavaScript, веб-сервер Nginx 1.27-alpine.
+   - **Порт:** 80 (NodePort `30080` у K8s).
+   - **Healthcheck:** `GET /` (HTTP 200).
+4. **Database (`db`):**
+   - **Стек:** PostgreSQL 16 Alpine.
+   - **Порт:** 5432.
+   - **Healthcheck:** `pg_isready -U taskuser -d taskdb`.
+   - **Дані:** Персистентний том `/var/lib/postgresql/data` (PVC).
 
 ---
 
-## Швидкий старт
-
-### Передумови
-- Встановлений Docker Desktop
-- Встановлений Docker Compose (йде разом із Docker Desktop)
-
-### Запуск усього проєкту
-
-```bash
-docker compose up --build
-```
-
-Після старту:
-- UI: http://localhost:8080
-- Backend API / Swagger: http://localhost:8000/docs
-- Notification API / Swagger: http://localhost:8001/docs
-- Health backend: http://localhost:8000/health
-- Health notification: http://localhost:8001/health
-
-Зупинити:
-
-```bash
-docker compose down
-```
-
-Зупинити і видалити дані БД:
-
-```bash
-docker compose down -v
-```
-
----
-
-## Тести (для наступної лабораторної вже корисно зараз)
-
-Backend:
-
-```bash
-cd backend
-pip install -r requirements.txt
-pytest -q
-```
-
-Notification service:
-
-```bash
-cd notification-service
-pip install -r requirements.txt
-pytest -q
-```
-
-Або через Docker (backend image):
-
-```bash
-docker compose run --rm backend pytest -q
-docker compose run --rm notification pytest -q
-```
-
----
-
-## Структура репозиторію
+## 2. Структура репозиторію
 
 ```text
 devops-task-manager/
-├── backend/                 # API завдань + тести + Dockerfile
-├── notification-service/    # мікросервіс сповіщень + тести + Dockerfile
-├── frontend/                # UI + Nginx + Dockerfile
-├── docker-compose.yml       # оркестрація всього стеку
-├── LAB1_DEMO.md             # текст для вивчення і захисту
-└── README.md
+├── .github/workflows/ci.yml         # CI/CD: Linting (Ruff, ESLint), Unit Tests, Trivy Scan, GHCR Publish
+├── backend/                         # Джерельний код та Dockerfile для Backend API
+├── frontend/                        # Джерельний код, конфігурація Nginx та Dockerfile UI
+├── notification-service/            # Джерельний код та Dockerfile для Notification Service
+├── docker-compose.yml               # Локальний запуск (ЛР№1)
+├── k8s/                             # Маніфести Kubernetes (ЛР№3, шифр DVO-L3-7F2A91, маскот "кабачок")
+│   ├── namespace.yaml
+│   ├── configmap.yaml
+│   ├── secret.yaml
+│   ├── pvc.yaml
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── ingress.yaml
+│   └── README.md
+├── helm/                            # Helm чарт (ЛР№4, шифр DVO-L4-3C8B52, маскот "гарбуз")
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   ├── values-dev.yaml
+│   ├── values-prod.yaml
+│   ├── templates/
+│   │   ├── _helpers.tpl
+│   │   ├── configmap.yaml
+│   │   ├── secret.yaml
+│   │   ├── pvc.yaml
+│   │   ├── deployment-backend.yaml
+│   │   ├── deployment-frontend.yaml
+│   │   ├── deployment-notification.yaml
+│   │   ├── deployment-db.yaml
+│   │   ├── service-backend.yaml
+│   │   ├── service-frontend.yaml
+│   │   ├── service-notification.yaml
+│   │   ├── service-db.yaml
+│   │   ├── ingress.yaml
+│   │   ├── NOTES.txt
+│   │   ├── pre-upgrade-db-check.yaml
+│   │   └── tests/test-connection.yaml
+│   └── README.md
+└── README.md                        # Загальна документація проєкту
 ```
 
 ---
 
-## Корисні команди для демонстрації
+## 3. Лабораторна робота №3: Kubernetes
 
+- **Шифр кафедральних вимог:** `DVO-L3-7F2A91` (вказано першим рядком у кожному маніфесті)
+- **Обов'язкове маркування:**
+  - `metadata.labels`: `mascot: кабачок`
+  - `metadata.annotations`: `devops-lab/mascot-approved: "true"`
+- **Простір імен:** `devops-task-manager`
+
+### Короткий гайд запуску:
 ```bash
-docker compose ps
-docker compose logs backend
-docker compose logs notification
-docker images
-docker ps
+# 1. Розгортання стеку:
+kubectl apply -f k8s/
+
+# 2. Моніторинг подів та сервісів:
+kubectl get all -n devops-task-manager
+
+# 3. Самовідновлення:
+kubectl delete pod -n devops-task-manager -l app=backend --wait=false
+kubectl get pods -n devops-task-manager -l app=backend -w
+
+# 4. Масштабування до 4 реплік:
+kubectl scale deployment taskmanager-backend --replicas=4 -n devops-task-manager
+
+# 5. Оновлення образу до 1.1.0 та відкат:
+kubectl set image deployment/taskmanager-backend backend=ghcr.io/dimahorinyuk/taskmanager-backend:1.1.0 -n devops-task-manager
+kubectl rollout status deployment/taskmanager-backend -n devops-task-manager
+kubectl rollout undo deployment/taskmanager-backend -n devops-task-manager
+
+# 6. Симуляція помилки ImagePullBackOff та діагностика:
+kubectl set image deployment/taskmanager-backend backend=ghcr.io/dimahorinyuk/taskmanager-backend:not-found -n devops-task-manager
+kubectl describe pod -n devops-task-manager -l app=backend
+kubectl rollout undo deployment/taskmanager-backend -n devops-task-manager
 ```
+*Детальні сценарії та скриншот-план описано в [k8s/README.md](file:///C:/Users/dima/Desktop/DevOps_Labs/devops-task-manager/k8s/README.md).*
 
-Створити завдання через API:
+---
 
+## 4. Лабораторна робота №4: Helm
+
+- **Шифр кафедральних вимог:** `DVO-L4-3C8B52` (вказано першим рядком у кожному файлі чарта)
+- **Обов'язкове маркування:**
+  - `metadata.labels`: `mascot: гарбуз`
+  - `metadata.annotations`: `devops-lab/mascot-approved: "true"`
+- **Реалізація Пункту 9:** Варіант `9.b` (Helm test `templates/tests/test-connection.yaml` + Pre-upgrade Hook `templates/hooks/pre-upgrade-db-check.yaml`).
+
+### Короткий гайд запуску:
 ```bash
-curl -X POST http://localhost:8000/tasks ^
-  -H "Content-Type: application/json" ^
-  -d "{\"title\":\"Lab 1\",\"description\":\"Docker compose demo\"}"
-```
+# 1. Валідація чарта:
+helm lint helm/
+helm lint helm/ -f helm/values-dev.yaml
+helm lint helm/ -f helm/values-prod.yaml
 
-Подивитись сповіщення:
+# 2. Сухий запуск (рендер шаблонів):
+helm template dev-test helm/ -f helm/values-dev.yaml
 
-```bash
-curl http://localhost:8001/notifications
+# 3. Встановлення Dev-релізу:
+helm install taskmanager-dev helm/ -f helm/values-dev.yaml -n taskmanager-helm --create-namespace
+
+# 4. Запуск Helm тестів:
+helm test taskmanager-dev -n taskmanager-helm
+
+# 5. Оновлення релізу до Prod (із запуском pre-upgrade хука перевірки БД):
+helm upgrade taskmanager-dev helm/ -f helm/values-prod.yaml -n taskmanager-helm
+
+# 6. Історія ревізій та відкат:
+helm history taskmanager-dev -n taskmanager-helm
+helm rollback taskmanager-dev 1 -n taskmanager-helm
+
+# 7. Видалення:
+helm uninstall taskmanager-dev -n taskmanager-helm
 ```
+*Детальна специфікація values та інструкції наведені в [helm/README.md](file:///C:/Users/dima/Desktop/DevOps_Labs/devops-task-manager/helm/README.md).*
