@@ -12,6 +12,7 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  # Вказуємо клас Ingress, якщо він заданий у values.yaml
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
@@ -19,6 +20,7 @@ spec:
     - host: {{ .Values.ingress.host | quote }}
       http:
         paths:
+          # Головна сторінка направляється на Frontend
           - path: /
             pathType: Prefix
             backend:
@@ -26,6 +28,8 @@ spec:
                 name: {{ include "devops-task-manager.fullname" . }}-frontend
                 port:
                   number: {{ .Values.frontend.service.port }}
+
+          # Запити API направляються на Backend
           - path: /api
             pathType: Prefix
             backend:
@@ -33,6 +37,8 @@ spec:
                 name: {{ include "devops-task-manager.fullname" . }}-backend
                 port:
                   number: {{ .Values.backend.service.port }}
+
+          # Запити сповіщень направляються на Notification
           - path: /notifications
             pathType: Prefix
             backend:

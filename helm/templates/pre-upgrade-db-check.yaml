@@ -8,6 +8,7 @@ metadata:
     {{- include "devops-task-manager.labels" . | nindent 4 }}
     app.kubernetes.io/component: pre-upgrade-hook
   annotations:
+    # Запускаємо перевірку перед оновленням Helm-релізу
     "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "-5"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -30,9 +31,13 @@ spec:
             - -c
             - |
               echo "Starting Pre-Upgrade verification..."
+
+              # Формуємо адресу бази даних і перевіряємо підключення
               {{- $dbHost := default (printf "%s-db" (include "devops-task-manager.fullname" .)) .Values.config.dbHost }}
               echo "Checking PostgreSQL connection to {{$dbHost}}:{{.Values.config.dbPort}}..."
               pg_isready -h "{{$dbHost}}" -p "{{.Values.config.dbPort}}" -U "{{.Values.secret.postgresUser}}" -d "{{.Values.secret.postgresDb}}" -t 10
+
+              # Якщо БД доступна, дозволяємо продовжити оновлення
               STATUS=$?
               if [ $STATUS -eq 0 ]; then
                 echo "Pre-upgrade check: PostgreSQL is healthy and accepting connections. Safe to upgrade."

@@ -10,15 +10,18 @@ metadata:
   annotations:
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
 spec:
+  # Тип доступу до Frontend задається через values.yaml
   type: {{ .Values.frontend.service.type }}
   ports:
     - port: {{ .Values.frontend.service.port }}
       targetPort: 80
       protocol: TCP
       name: http
+      # Вказуємо NodePort, тільки якщо обраний відповідний тип сервісу
       {{- if and (eq .Values.frontend.service.type "NodePort") .Values.frontend.service.nodePort }}
       nodePort: {{ .Values.frontend.service.nodePort }}
       {{- end }}
+  # Знаходимо Pod Frontend за його мітками
   selector:
     {{- include "devops-task-manager.selectorLabels" . | nindent 4 }}
     app: frontend

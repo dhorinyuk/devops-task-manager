@@ -1,4 +1,5 @@
 # DVO-L4-3C8B52
+# Створюємо тестовий Pod, якщо тести увімкнені
 {{- if .Values.tests.enabled }}
 apiVersion: v1
 kind: Pod
@@ -8,6 +9,7 @@ metadata:
     {{- include "devops-task-manager.labels" . | nindent 4 }}
     app.kubernetes.io/component: test
   annotations:
+    # Позначаємо Pod як тест Helm-релізу
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
@@ -20,14 +22,20 @@ spec:
         - sh
         - -c
         - |
+          # Перевіряємо доступність Frontend
           echo "Testing Frontend HTTP connection..."
           curl --fail --connect-timeout 5 http://{{ include "devops-task-manager.fullname" . }}-frontend:{{ .Values.frontend.service.port }}
+
+          # Перевіряємо Backend
           echo ""
           echo "Testing Backend API /health endpoint..."
           curl --fail --connect-timeout 5 http://{{ include "devops-task-manager.fullname" . }}-backend:{{ .Values.backend.service.port }}/health
+
+          # Перевіряємо Notification
           echo ""
           echo "Testing Notification Service /health endpoint..."
           curl --fail --connect-timeout 5 http://{{ include "devops-task-manager.fullname" . }}-notification:{{ .Values.notification.service.port }}/health
+
           echo ""
           echo "All connection tests passed successfully!"
   restartPolicy: Never

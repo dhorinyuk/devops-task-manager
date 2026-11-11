@@ -10,6 +10,7 @@ metadata:
   annotations:
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
 spec:
+  # Кількість копій Frontend
   replicas: {{ .Values.frontend.replicaCount }}
   selector:
     matchLabels:
@@ -25,6 +26,7 @@ spec:
     spec:
       containers:
         - name: frontend
+          # Образ і версія задаються через values.yaml
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
@@ -32,6 +34,7 @@ spec:
               containerPort: {{ .Values.frontend.service.port }}
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
+          # Перевіряємо, чи працює Frontend
           livenessProbe:
             httpGet:
               path: {{ .Values.frontend.probes.liveness.path }}
@@ -39,6 +42,7 @@ spec:
             initialDelaySeconds: {{ .Values.frontend.probes.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.frontend.probes.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.frontend.probes.liveness.timeoutSeconds }}
+          # Перевіряємо, чи готовий Frontend приймати запити
           readinessProbe:
             httpGet:
               path: {{ .Values.frontend.probes.readiness.path }}

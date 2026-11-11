@@ -10,6 +10,7 @@ metadata:
   annotations:
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
 spec:
+  # Кількість копій сервісу сповіщень
   replicas: {{ .Values.notification.replicaCount }}
   selector:
     matchLabels:
@@ -25,6 +26,7 @@ spec:
     spec:
       containers:
         - name: notification
+          # Образ і версія сервісу задаються через values.yaml
           image: "{{ .Values.notification.image.repository }}:{{ .Values.notification.image.tag }}"
           imagePullPolicy: {{ .Values.notification.image.pullPolicy }}
           ports:
@@ -32,6 +34,7 @@ spec:
               containerPort: {{ .Values.notification.service.port }}
           resources:
             {{- toYaml .Values.notification.resources | nindent 12 }}
+          # Перевіряємо, чи працює сервіс
           livenessProbe:
             httpGet:
               path: {{ .Values.notification.probes.liveness.path }}
@@ -39,6 +42,7 @@ spec:
             initialDelaySeconds: {{ .Values.notification.probes.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.notification.probes.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.notification.probes.liveness.timeoutSeconds }}
+          # Перевіряємо, чи готовий сервіс приймати запити
           readinessProbe:
             httpGet:
               path: {{ .Values.notification.probes.readiness.path }}

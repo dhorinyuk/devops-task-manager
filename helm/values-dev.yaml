@@ -1,10 +1,12 @@
 # DVO-L4-3C8B52
-# Environment-specific values: DEVELOPMENT
+# Налаштування Helm-чарту для DEVELOPMENT
 
+# Параметри середовища розробки
 config:
   appEnv: "development"
   logLevel: "debug"
 
+# Налаштування Backend
 backend:
   replicaCount: 1
   image:
@@ -17,6 +19,7 @@ backend:
       cpu: 250m
       memory: 128Mi
 
+# Налаштування Frontend
 frontend:
   replicaCount: 1
   image:
@@ -29,14 +32,17 @@ frontend:
       cpu: 150m
       memory: 128Mi
 
+# Налаштування сервісу сповіщень
 notification:
   replicaCount: 1
   image:
     pullPolicy: IfNotPresent
 
+# Політика завантаження образу PostgreSQL
 db:
   image:
     pullPolicy: IfNotPresent
 
+# У Dev-середовищі Ingress вимкнений
 ingress:
   enabled: false

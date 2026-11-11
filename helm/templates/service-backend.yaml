@@ -10,12 +10,14 @@ metadata:
   annotations:
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
 spec:
+  # Тип сервісу задається через values.yaml
   type: {{ .Values.backend.service.type }}
   ports:
     - port: {{ .Values.backend.service.port }}
       targetPort: {{ .Values.backend.service.port }}
       protocol: TCP
       name: http
+  # Знаходимо Pod Backend за його мітками
   selector:
     {{- include "devops-task-manager.selectorLabels" . | nindent 4 }}
     app: backend

@@ -11,12 +11,14 @@ metadata:
   annotations:
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
 spec:
+  # Створюємо внутрішній сервіс для доступу до PostgreSQL
   type: {{ .Values.db.service.type }}
   ports:
     - port: {{ .Values.db.service.port }}
       targetPort: 5432
       protocol: TCP
       name: postgres
+  # Направляємо запити на Pod бази даних
   selector:
     {{- include "devops-task-manager.selectorLabels" . | nindent 4 }}
     app: db

@@ -10,12 +10,14 @@ metadata:
   annotations:
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
 spec:
+  # Тип доступу до сервісу сповіщень
   type: {{ .Values.notification.service.type }}
   ports:
     - port: {{ .Values.notification.service.port }}
       targetPort: {{ .Values.notification.service.port }}
       protocol: TCP
       name: http
+  # Знаходимо Pod Notification за його мітками
   selector:
     {{- include "devops-task-manager.selectorLabels" . | nindent 4 }}
     app: notification

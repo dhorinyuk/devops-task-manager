@@ -10,9 +10,11 @@ metadata:
   annotations:
     {{- include "devops-task-manager.annotations" . | nindent 4 }}
 spec:
+  # Режим доступу до сховища
   accessModes:
     - {{ .Values.db.persistence.accessMode | quote }}
   resources:
     requests:
+      # Розмір постійного сховища для PostgreSQL
       storage: {{ .Values.db.persistence.size | quote }}
 {{- end }}
