@@ -1,21 +1,37 @@
-# DVO-L3-7F2A91
+# API для роботи з Ingress
 apiVersion: networking.k8s.io/v1
+
+# Тип об'єкта — Ingress
 kind: Ingress
+
 metadata:
   name: taskmanager-ingress
   namespace: devops-task-manager
+
+  # Мітки для ідентифікації
   labels:
     app.kubernetes.io/name: devops-task-manager
     mascot: кабачок
+
+  # Додаткова інформація та налаштування NGINX
   annotations:
     devops-lab/mascot-approved: "true"
+
+    # Переписує шлях запиту на /
     nginx.ingress.kubernetes.io/rewrite-target: /
+
 spec:
+  # Використовуємо контролер NGINX
   ingressClassName: nginx
+
+  # Правила маршрутизації запитів
   rules:
+    # Домен, через який відкривається застосунок
     - host: taskmanager.local
       http:
         paths:
+
+          # Головна сторінка направляється на Frontend
           - path: /
             pathType: Prefix
             backend:
@@ -23,6 +39,8 @@ spec:
                 name: frontend
                 port:
                   number: 80
+
+          # Запити до /api направляються на Backend
           - path: /api
             pathType: Prefix
             backend:
@@ -30,6 +48,9 @@ spec:
                 name: backend
                 port:
                   number: 8000
+
+          # Запити до /notifications направляються
+          # на сервіс сповіщень
           - path: /notifications
             pathType: Prefix
             backend:

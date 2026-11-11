@@ -1,27 +1,46 @@
-# DVO-L3-7F2A91
+# API Kubernetes для створення Service
 apiVersion: v1
+
+# Тип об'єкта — Service
 kind: Service
+
 metadata:
+  # Назва сервісу бази даних
   name: db
   namespace: devops-task-manager
+
+  # Мітки для ідентифікації
   labels:
     app: db
     app.kubernetes.io/name: postgres
     mascot: кабачок
+
+  # Додаткова інформація
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Внутрішній тип сервісу, доступний усередині кластера
   type: ClusterIP
+
+  # Вибираємо Pod бази даних за мітками
   selector:
     app: db
     mascot: кабачок
+
   ports:
+    # Назва порту
     - name: postgres
+      # Порт, на якому Service приймає запити
       port: 5432
+      # Порт контейнера, куди передаються запити
       targetPort: 5432
+
 ---
+# Другий Service — для сервісу сповіщень
 apiVersion: v1
 kind: Service
+
 metadata:
   name: notification
   namespace: devops-task-manager
@@ -31,18 +50,28 @@ metadata:
     mascot: кабачок
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Доступний лише всередині Kubernetes-кластера
   type: ClusterIP
+
+  # Знаходить Pod сервісу сповіщень
   selector:
     app: notification
     mascot: кабачок
+
   ports:
     - name: http
+      # Порт Service
       port: 8001
+      # Порт контейнера
       targetPort: 8001
+
 ---
+# Третій Service — для Backend
 apiVersion: v1
 kind: Service
+
 metadata:
   name: backend
   namespace: devops-task-manager
@@ -52,18 +81,28 @@ metadata:
     mascot: кабачок
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Внутрішній доступ до Backend
   type: ClusterIP
+
+  # Знаходить Pod Backend за мітками
   selector:
     app: backend
     mascot: кабачок
+
   ports:
     - name: http
+      # Порт Service
       port: 8000
+      # Порт контейнера Backend
       targetPort: 8000
+
 ---
+# Четвертий Service — для Frontend
 apiVersion: v1
 kind: Service
+
 metadata:
   name: frontend
   namespace: devops-task-manager
@@ -73,13 +112,21 @@ metadata:
     mascot: кабачок
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Дозволяє доступ до Frontend через порт вузла
   type: NodePort
+
+  # Знаходить Pod Frontend за мітками
   selector:
     app: frontend
     mascot: кабачок
+
   ports:
     - name: http
+      # Порт Service всередині кластера
       port: 80
+      # Порт контейнера Frontend
       targetPort: 80
+      # Зовнішній порт вузла для доступу до Frontend
       nodePort: 30080

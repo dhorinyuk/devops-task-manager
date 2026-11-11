@@ -1,6 +1,9 @@
-# DVO-L3-7F2A91
+# DEPLOYMENT 1: БАЗА ДАНИХ POSTGRESQL
+
+# API для створення Deployment
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: taskmanager-db
   namespace: devops-task-manager
@@ -11,14 +14,23 @@ metadata:
     mascot: кабачок
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Кількість копій бази даних
   replicas: 1
+
   strategy:
+    # Перед запуском нового Pod старий зупиняється.
+    # Для бази даних це допомагає уникнути одночасного доступу до сховища.
     type: Recreate
+
+  # Визначає, якими мітками знаходити Pod-и
   selector:
     matchLabels:
       app: db
       mascot: кабачок
+
+  # Шаблон створення Pod-а
   template:
     metadata:
       labels:
@@ -26,30 +38,42 @@ spec:
         mascot: кабачок
       annotations:
         devops-lab/mascot-approved: "true"
+
     spec:
       containers:
         - name: db
+          # Docker-образ PostgreSQL версії 16
           image: postgres:16-alpine
+
+          # Завантажувати образ, якщо його ще немає локально
           imagePullPolicy: IfNotPresent
+
+          # Отримання параметрів бази даних із Secret
           env:
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
                   name: taskmanager-secret
                   key: POSTGRES_DB
+
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: taskmanager-secret
                   key: POSTGRES_USER
+
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: taskmanager-secret
                   key: POSTGRES_PASSWORD
+
           ports:
+            # Порт PostgreSQL
             - name: postgres
               containerPort: 5432
+
+          # Ресурси, які потрібні контейнеру та їхні максимальні межі
           resources:
             requests:
               cpu: 100m
@@ -57,9 +81,14 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+
+          # Підключення постійного сховища до контейнера
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
+
+          # Перевіряє, чи працює база даних.
+          # Якщо перевірка постійно не проходить, контейнер перезапускається.
           livenessProbe:
             exec:
               command:
@@ -72,6 +101,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 5
+
+          # Перевіряє, чи готова база приймати підключення
           readinessProbe:
             exec:
               command:
@@ -84,13 +115,20 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
+
+      # Підключення PVC до Pod-а
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
+
 ---
+
+# DEPLOYMENT 2: СЕРВІС СПОВІЩЕНЬ
+
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: taskmanager-notification
   namespace: devops-task-manager
@@ -101,12 +139,16 @@ metadata:
     mascot: кабачок
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Одна копія сервісу сповіщень
   replicas: 1
+
   selector:
     matchLabels:
       app: notification
       mascot: кабачок
+
   template:
     metadata:
       labels:
@@ -114,14 +156,20 @@ spec:
         mascot: кабачок
       annotations:
         devops-lab/mascot-approved: "true"
+
     spec:
       containers:
         - name: notification
+          # Образ сервісу сповіщень версії 1.0.0
           image: ghcr.io/dimahorinyuk/taskmanager-notification:1.0.0
           imagePullPolicy: IfNotPresent
+
           ports:
+            # Порт сервісу сповіщень
             - name: http
               containerPort: 8001
+
+          # Запитувані та максимальні ресурси
           resources:
             requests:
               cpu: 50m
@@ -129,6 +177,8 @@ spec:
             limits:
               cpu: 250m
               memory: 128Mi
+
+          # Перевірка працездатності сервісу
           livenessProbe:
             httpGet:
               path: /health
@@ -137,6 +187,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
+
+          # Перевірка готовності приймати запити
           readinessProbe:
             httpGet:
               path: /health
@@ -145,9 +197,14 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
+
 ---
+
+# DEPLOYMENT 3: BACKEND
+
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: taskmanager-backend
   namespace: devops-task-manager
@@ -158,12 +215,16 @@ metadata:
     mascot: кабачок
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Запускаємо дві копії Backend
   replicas: 2
+
   selector:
     matchLabels:
       app: backend
       mascot: кабачок
+
   template:
     metadata:
       labels:
@@ -171,35 +232,50 @@ spec:
         mascot: кабачок
       annotations:
         devops-lab/mascot-approved: "true"
+
     spec:
       containers:
         - name: backend
+          # Образ Backend версії 1.0.0
           image: ghcr.io/dimahorinyuk/taskmanager-backend:1.0.0
           imagePullPolicy: IfNotPresent
+
           ports:
+            # Порт Backend
             - name: http
               containerPort: 8000
+
+          # Передаємо налаштування в контейнер
           env:
+            # Адреса бази даних береться із Secret
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: taskmanager-secret
                   key: DATABASE_URL
+
+            # Адреса сервісу сповіщень із ConfigMap
             - name: NOTIFICATION_URL
               valueFrom:
                 configMapKeyRef:
                   name: taskmanager-config
                   key: NOTIFICATION_URL
+
+            # Середовище запуску із ConfigMap
             - name: APP_ENV
               valueFrom:
                 configMapKeyRef:
                   name: taskmanager-config
                   key: APP_ENV
+
+            # Рівень логування із ConfigMap
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
                   name: taskmanager-config
                   key: LOG_LEVEL
+
+          # Запитувані та максимальні ресурси
           resources:
             requests:
               cpu: 100m
@@ -207,6 +283,8 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+
+          # Перевіряє, чи працює Backend
           livenessProbe:
             httpGet:
               path: /health
@@ -215,6 +293,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
+
+          # Перевіряє, чи готовий Backend приймати запити
           readinessProbe:
             httpGet:
               path: /health
@@ -223,9 +303,14 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
+
 ---
+
+# DEPLOYMENT 4: FRONTEND
+
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: taskmanager-frontend
   namespace: devops-task-manager
@@ -236,12 +321,16 @@ metadata:
     mascot: кабачок
   annotations:
     devops-lab/mascot-approved: "true"
+
 spec:
+  # Дві копії Frontend для доступності
   replicas: 2
+
   selector:
     matchLabels:
       app: frontend
       mascot: кабачок
+
   template:
     metadata:
       labels:
@@ -249,14 +338,20 @@ spec:
         mascot: кабачок
       annotations:
         devops-lab/mascot-approved: "true"
+
     spec:
       containers:
         - name: frontend
+          # Образ Frontend версії 1.0.0
           image: ghcr.io/dimahorinyuk/taskmanager-frontend:1.0.0
           imagePullPolicy: IfNotPresent
+
           ports:
+            # Порт вебінтерфейсу
             - name: http
               containerPort: 80
+
+          # Запитувані та максимальні ресурси
           resources:
             requests:
               cpu: 50m
@@ -264,6 +359,8 @@ spec:
             limits:
               cpu: 250m
               memory: 128Mi
+
+          # Перевіряє, чи працює Frontend
           livenessProbe:
             httpGet:
               path: /
@@ -272,6 +369,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
+
+          # Перевіряє, чи готовий Frontend приймати запити
           readinessProbe:
             httpGet:
               path: /
