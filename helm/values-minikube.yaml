@@ -43,7 +43,7 @@ frontend:
   service:
     type: NodePort
     port: 80
-    nodePort: 30080
+    nodePort: 30085
   resources:
     requests:
       cpu: 30m
