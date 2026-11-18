@@ -1,5 +1,4 @@
 # DEPLOYMENT 1: БАЗА ДАНИХ POSTGRESQL
-
 # API для створення Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -11,7 +10,7 @@ metadata:
     app: db
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
-    mascot: кабачок
+    mascot: kabachok
   annotations:
     devops-lab/mascot-approved: "true"
 
@@ -28,14 +27,14 @@ spec:
   selector:
     matchLabels:
       app: db
-      mascot: кабачок
+      mascot: kabachok
 
   # Шаблон створення Pod-а
   template:
     metadata:
       labels:
         app: db
-        mascot: кабачок
+        mascot: kabachok
       annotations:
         devops-lab/mascot-approved: "true"
 
@@ -136,7 +135,7 @@ metadata:
     app: notification
     app.kubernetes.io/name: taskmanager-notification
     app.kubernetes.io/component: notification-service
-    mascot: кабачок
+    mascot: kabachok
   annotations:
     devops-lab/mascot-approved: "true"
 
@@ -147,13 +146,13 @@ spec:
   selector:
     matchLabels:
       app: notification
-      mascot: кабачок
+      mascot: kabachok
 
   template:
     metadata:
       labels:
         app: notification
-        mascot: кабачок
+        mascot: kabachok
       annotations:
         devops-lab/mascot-approved: "true"
 
@@ -212,7 +211,7 @@ metadata:
     app: backend
     app.kubernetes.io/name: taskmanager-backend
     app.kubernetes.io/component: backend
-    mascot: кабачок
+    mascot: kabachok
   annotations:
     devops-lab/mascot-approved: "true"
 
@@ -223,13 +222,13 @@ spec:
   selector:
     matchLabels:
       app: backend
-      mascot: кабачок
+      mascot: kabachok
 
   template:
     metadata:
       labels:
         app: backend
-        mascot: кабачок
+        mascot: kabachok
       annotations:
         devops-lab/mascot-approved: "true"
 
@@ -318,7 +317,7 @@ metadata:
     app: frontend
     app.kubernetes.io/name: taskmanager-frontend
     app.kubernetes.io/component: frontend
-    mascot: кабачок
+    mascot: kabachok
   annotations:
     devops-lab/mascot-approved: "true"
 
@@ -329,13 +328,13 @@ spec:
   selector:
     matchLabels:
       app: frontend
-      mascot: кабачок
+      mascot: kabachok
 
   template:
     metadata:
       labels:
         app: frontend
-        mascot: кабачок
+        mascot: kabachok
       annotations:
         devops-lab/mascot-approved: "true"
 

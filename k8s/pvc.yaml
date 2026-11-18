@@ -1,23 +1,17 @@
-# API Kubernetes для роботи зі сховищами
 apiVersion: v1
 
-# Тип об'єкта — PersistentVolumeClaim
 kind: PersistentVolumeClaim
 
 metadata:
-  # Назва запиту на сховище
   name: postgres-pvc
 
-  # Namespace, у якому створюється сховище
   namespace: devops-task-manager
 
-  # Мітки для ідентифікації
   labels:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
-    mascot: кабачок
+    mascot: kabachok
 
-  # Додаткова інформація
   annotations:
     devops-lab/mascot-approved: "true"
 

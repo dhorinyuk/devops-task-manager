@@ -1,19 +1,15 @@
-# API для роботи з Ingress
 apiVersion: networking.k8s.io/v1
 
-# Тип об'єкта — Ingress
 kind: Ingress
 
 metadata:
   name: taskmanager-ingress
   namespace: devops-task-manager
 
-  # Мітки для ідентифікації
   labels:
     app.kubernetes.io/name: devops-task-manager
-    mascot: кабачок
+    mascot: kabachok
 
-  # Додаткова інформація та налаштування NGINX
   annotations:
     devops-lab/mascot-approved: "true"
 

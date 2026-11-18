@@ -30,14 +30,14 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels with mandatory mascot: гарбуз
+Common labels with mandatory mascot: harbuz
 */}}
 {{- define "devops-task-manager.labels" -}}
 helm.sh/chart: {{ include "devops-task-manager.chart" . }}
 {{ include "devops-task-manager.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Values.backend.image.tag | default .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-mascot: {{ .Values.mascot | default "гарбуз" | quote }}
+mascot: {{ .Values.mascot | default "harbuz" | quote }}
 {{- end }}
 
 {{/*

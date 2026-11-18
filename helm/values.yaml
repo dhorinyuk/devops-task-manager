@@ -2,7 +2,7 @@
 # Значення за замовчуванням для Dev-середовища
 
 # Обов'язкова мітка лабораторної роботи
-mascot: "гарбуз"
+mascot: "harbuz"
 
 # Налаштування Backend
 backend:
@@ -45,7 +45,7 @@ frontend:
   service:
     type: NodePort
     port: 80
-    nodePort: 30080
+    nodePort: 30081
   resources:
     requests:
       cpu: 50m
