@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.2.0"
 
 app = FastAPI(title="Notification Service", version=APP_VERSION)
 
