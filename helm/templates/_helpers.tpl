@@ -54,3 +54,14 @@ Selector labels
 app.kubernetes.io/name: {{ include "devops-task-manager.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{/*
+Get secret name, supporting existingSecret pattern for GitOps security
+*/}}
+{{- define "devops-task-manager.secretName" -}}
+{{- if and .Values.secret .Values.secret.existingSecret -}}
+{{- .Values.secret.existingSecret -}}
+{{- else -}}
+{{- printf "%s-secret" (include "devops-task-manager.fullname" .) -}}
+{{- end -}}
+{{- end -}}

@@ -45,6 +45,11 @@ def health():
     return {"status": "ok", "service": "notification", "version": APP_VERSION}
 
 
+@app.get("/version")
+def version():
+    return {"version": APP_VERSION, "service": "notification"}
+
+
 @app.post("/notifications", response_model=NotificationResponse, status_code=201)
 def create_notification(payload: NotificationCreate):
     item = {

@@ -41,6 +41,11 @@ def health():
     return {"status": "ok", "service": "backend", "version": APP_VERSION}
 
 
+@app.get("/version")
+def version():
+    return {"version": APP_VERSION, "service": "backend"}
+
+
 @app.get("/tasks", response_model=list[schemas.TaskResponse])
 def list_tasks(db: Session = Depends(get_db)):
     return db.query(models.Task).order_by(models.Task.id.desc()).all()

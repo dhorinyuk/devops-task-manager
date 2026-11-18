@@ -39,17 +39,17 @@ spec:
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "devops-task-manager.fullname" . }}-secret
+                  name: {{ include "devops-task-manager.secretName" . }}
                   key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "devops-task-manager.fullname" . }}-secret
+                  name: {{ include "devops-task-manager.secretName" . }}
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "devops-task-manager.fullname" . }}-secret
+                  name: {{ include "devops-task-manager.secretName" . }}
                   key: POSTGRES_PASSWORD
           resources:
             {{- toYaml .Values.db.resources | nindent 12 }}

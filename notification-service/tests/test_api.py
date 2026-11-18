@@ -10,6 +10,13 @@ def test_health():
     assert response.json()["service"] == "notification"
 
 
+def test_version():
+    response = client.get("/version")
+    assert response.status_code == 200
+    assert response.json()["service"] == "notification"
+    assert "version" in response.json()
+
+
 def test_create_and_list_notifications():
     client.delete("/notifications")
 

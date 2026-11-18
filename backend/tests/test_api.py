@@ -52,6 +52,14 @@ def test_health(client):
     assert body["service"] == "backend"
 
 
+def test_version(client):
+    response = client.get("/version")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["service"] == "backend"
+    assert "version" in body
+
+
 def test_create_and_list_tasks(client):
     create = client.post(
         "/tasks",

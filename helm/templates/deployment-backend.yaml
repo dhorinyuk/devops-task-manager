@@ -37,7 +37,7 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "devops-task-manager.fullname" . }}-secret
+                  name: {{ include "devops-task-manager.secretName" . }}
                   key: DATABASE_URL
             # Інші налаштування беремо з ConfigMap
             - name: NOTIFICATION_URL
